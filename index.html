@@ -1,123 +1,1076 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+
 <title>跑走間歇計時器</title>
+
 <style>
-:root{--bg:#f5f1e8;--card:#fffdf8;--ink:#222;--muted:#777;--line:#ddd7cc;--run:#dcecff;--walk:#dff2df;--warm:#f6ead2;--cool:#ece7f6}
-*{box-sizing:border-box}body{margin:0;min-height:100vh;min-height:100dvh;padding:22px 17px;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"PingFang TC",sans-serif}
-.wrap{max-width:560px;margin:auto}h1{font-size:27px;margin:4px 0}.sub{color:var(--muted);font-size:14px;margin:0 0 16px}.card{background:var(--card);border:1px solid var(--line);border-radius:22px;padding:17px}
-.row{display:grid;grid-template-columns:1fr 88px 88px;gap:8px;align-items:center;padding:11px 0;border-bottom:1px solid var(--line)}.row.simple{grid-template-columns:1fr 184px}.label b{display:block;font-size:17px}.label small{color:var(--muted)}
-.field{text-align:center}.field label{font-size:11px;color:var(--muted);display:block;margin-bottom:4px}input{width:100%;font-size:20px;text-align:center;border:1px solid var(--line);border-radius:11px;padding:10px 4px;background:#fff;color:#222}
-button{font-family:inherit}.start{width:100%;margin-top:16px;border:0;border-radius:17px;padding:17px;background:#222;color:#fff;font-size:20px;font-weight:700}.summary{text-align:center;color:#777;font-size:13px;margin-top:12px}.tip{font-size:12px;color:#888;margin-top:12px;line-height:1.5}
-#timerScreen{display:none;min-height:calc(100dvh - 44px);flex-direction:column;text-align:center}.phasebox{flex:1;display:flex;flex-direction:column;justify-content:center;border-radius:28px;padding:25px 12px;margin-bottom:14px;background:var(--warm)}
-.phase{font-size:36px;font-weight:800}.round{font-size:15px;color:#666;margin:8px 0 25px}.time{font-size:clamp(82px,25vw,130px);font-weight:800;line-height:.9;letter-spacing:-5px;font-variant-numeric:tabular-nums}.next{font-size:16px;color:#666;margin-top:28px}
-.controls{display:grid;grid-template-columns:1fr 1fr;gap:9px}.controls button{border:1px solid var(--line);border-radius:15px;padding:15px;background:#fff;font-size:16px;color:#222}.controls .dark{background:#222;color:#fff}.end{border:0;background:transparent;color:#777;padding:14px;font-size:14px;width:100%}
+:root{
+  --bg:#f5f1e8;
+  --card:#fffdf8;
+  --blue:#dcecff;
+  --green:#e1f2df;
+  --text:#222;
+  --sub:#777;
+  --line:#ddd6ca;
+  --dark:#222;
+  --danger:#b94a48;
+}
+
+*{
+  box-sizing:border-box;
+  -webkit-tap-highlight-color:transparent;
+}
+
+body{
+  margin:0;
+  background:var(--bg);
+  color:var(--text);
+  font-family:-apple-system,BlinkMacSystemFont,
+  "SF Pro Display","PingFang TC","Noto Sans TC",sans-serif;
+}
+
+.container{
+  width:min(92%,560px);
+  margin:auto;
+  padding:28px 0 60px;
+}
+
+h1{
+  font-size:32px;
+  margin:10px 0 26px;
+}
+
+h2{
+  font-size:24px;
+  margin:0 0 18px;
+}
+
+.card{
+  background:var(--card);
+  border-radius:26px;
+  padding:22px;
+  margin-bottom:18px;
+  border:1px solid rgba(0,0,0,.05);
+}
+
+label{
+  display:block;
+  font-size:15px;
+  color:var(--sub);
+  margin-bottom:8px;
+}
+
+input{
+  width:100%;
+  padding:15px;
+  border-radius:15px;
+  border:1px solid var(--line);
+  background:white;
+  font-size:20px;
+  color:var(--text);
+}
+
+.nameInput{
+  font-size:18px;
+}
+
+.grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:12px;
+}
+
+.field{
+  margin-bottom:16px;
+}
+
+button{
+  font-family:inherit;
+  border:none;
+  cursor:pointer;
+}
+
+.primary{
+  width:100%;
+  padding:18px;
+  border-radius:18px;
+  background:var(--dark);
+  color:white;
+  font-size:20px;
+  font-weight:700;
+}
+
+.secondary{
+  width:100%;
+  padding:16px;
+  border-radius:18px;
+  background:white;
+  border:1px solid var(--line);
+  font-size:17px;
+  color:var(--text);
+}
+
+.smallInfo{
+  margin-top:14px;
+  text-align:center;
+  color:var(--sub);
+  font-size:14px;
+  line-height:1.6;
+}
+
+/* 計時畫面 */
+
+#timerPage{
+  display:none;
+  min-height:100vh;
+  padding:
+    max(25px,env(safe-area-inset-top))
+    18px
+    max(30px,env(safe-area-inset-bottom));
+}
+
+.timerWrap{
+  width:min(100%,560px);
+  margin:auto;
+}
+
+.timerCard{
+  min-height:68vh;
+  border-radius:32px;
+  background:var(--blue);
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+  padding:30px 15px;
+}
+
+.timerName{
+  font-size:17px;
+  color:#666;
+  margin-bottom:35px;
+}
+
+.phase{
+  font-size:48px;
+  font-weight:900;
+  margin-bottom:10px;
+}
+
+.round{
+  font-size:22px;
+  color:#666;
+}
+
+.time{
+  font-size:clamp(86px,25vw,150px);
+  line-height:1;
+  font-weight:900;
+  letter-spacing:-6px;
+  margin:45px 0;
+}
+
+.next{
+  color:#777;
+  font-size:20px;
+}
+
+.controls{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:12px;
+  margin-top:18px;
+}
+
+.controlBtn{
+  padding:20px 8px;
+  border-radius:18px;
+  font-size:19px;
+}
+
+.pause{
+  background:var(--dark);
+  color:white;
+}
+
+.skip{
+  background:white;
+  border:1px solid var(--line);
+}
+
+.endBtn{
+  display:block;
+  margin:24px auto 0;
+  background:none;
+  color:#777;
+  font-size:17px;
+}
+
+/* 紀錄 */
+
+.historyHeader{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:15px;
+}
+
+.historyHeader h2{
+  margin:0;
+}
+
+.clearBtn{
+  background:none;
+  color:var(--danger);
+  font-size:14px;
+}
+
+.empty{
+  text-align:center;
+  padding:30px 10px;
+  color:#999;
+}
+
+.record{
+  background:white;
+  border-radius:20px;
+  padding:17px;
+  margin-bottom:12px;
+  border:1px solid rgba(0,0,0,.06);
+}
+
+.recordTop{
+  display:flex;
+  justify-content:space-between;
+  gap:10px;
+}
+
+.recordName{
+  font-size:19px;
+  font-weight:700;
+}
+
+.recordStatus{
+  font-size:13px;
+  white-space:nowrap;
+  padding:5px 9px;
+  border-radius:20px;
+  background:#edf4e9;
+  height:max-content;
+}
+
+.recordStatus.incomplete{
+  background:#f5e6e4;
+}
+
+.recordDate{
+  color:#888;
+  font-size:14px;
+  margin-top:5px;
+}
+
+.recordInfo{
+  margin-top:13px;
+  line-height:1.7;
+  color:#555;
+  font-size:15px;
+}
+
+.deleteBtn{
+  margin-top:10px;
+  background:none;
+  color:#aaa;
+  font-size:14px;
+  padding:0;
+}
+
+.tabs{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:8px;
+  margin-bottom:20px;
+  background:#eae5dc;
+  padding:5px;
+  border-radius:17px;
+}
+
+.tab{
+  padding:12px;
+  border-radius:13px;
+  background:transparent;
+  font-size:16px;
+}
+
+.tab.active{
+  background:white;
+  font-weight:700;
+}
+
+#historySection{
+  display:none;
+}
+
 </style>
 </head>
-<body>
-<div class="wrap">
-<section id="setupScreen">
-<h1>跑走間歇計時器</h1>
-<p class="sub">自訂跑、走、組數、暖身與收操。</p>
-<div class="card">
-<div class="row"><div class="label"><b>🏃 跑</b><small>每次跑多久</small></div><div class="field"><label>分鐘</label><input id="runM" type="number" value="1" min="0"></div><div class="field"><label>秒</label><input id="runS" type="number" value="0" min="0" max="59"></div></div>
-<div class="row"><div class="label"><b>🚶 走</b><small>每次走多久</small></div><div class="field"><label>分鐘</label><input id="walkM" type="number" value="2" min="0"></div><div class="field"><label>秒</label><input id="walkS" type="number" value="0" min="0" max="59"></div></div>
-<div class="row simple"><div class="label"><b>🔁 組數</b><small>跑＋走算一組</small></div><div class="field"><label>組</label><input id="rounds" type="number" value="8" min="1"></div></div>
-<div class="row"><div class="label"><b>暖身</b><small>設 0 即跳過</small></div><div class="field"><label>分鐘</label><input id="warmM" type="number" value="5" min="0"></div><div class="field"><label>秒</label><input id="warmS" type="number" value="0" min="0" max="59"></div></div>
-<div class="row"><div class="label"><b>收操</b><small>設 0 即跳過</small></div><div class="field"><label>分鐘</label><input id="coolM" type="number" value="5" min="0"></div><div class="field"><label>秒</label><input id="coolS" type="number" value="0" min="0" max="59"></div></div>
-<button type="button" class="start" id="startBtn">開始訓練</button>
-<div class="summary" id="summary">跑 01:00 ／ 走 02:00 × 8 組</div>
-<div class="tip">全程靜音。跑步時請讓頁面保持開啟。</div>
-</div>
-</section>
 
-<section id="timerScreen">
-<div class="phasebox" id="phasebox">
-<div class="phase" id="phase">暖身</div>
-<div class="round" id="round">準備開始</div>
-<div class="time" id="time">05:00</div>
-<div class="next" id="next">下一段：跑 01:00</div>
+<body>
+
+<!-- 首頁 -->
+<div id="homePage" class="container">
+
+  <h1>跑走間歇計時器</h1>
+
+  <div class="tabs">
+    <button id="setupTab" class="tab active" onclick="showSetup()">
+      設定訓練
+    </button>
+
+    <button id="historyTab" class="tab" onclick="showHistory()">
+      訓練紀錄
+    </button>
+  </div>
+
+
+  <!-- 設定 -->
+  <div id="setupSection">
+
+    <div class="card">
+
+      <div class="field">
+        <label>這次訓練叫什麼？</label>
+        <input
+          id="workoutName"
+          class="nameInput"
+          type="text"
+          placeholder="例如：10/4 跑走 A"
+        >
+      </div>
+
+      <div class="grid">
+
+        <div class="field">
+          <label>跑（分鐘）</label>
+          <input id="runMin" type="number" min="0" value="1">
+        </div>
+
+        <div class="field">
+          <label>跑（秒）</label>
+          <input id="runSec" type="number" min="0" max="59" value="0">
+        </div>
+
+        <div class="field">
+          <label>走（分鐘）</label>
+          <input id="walkMin" type="number" min="0" value="2">
+        </div>
+
+        <div class="field">
+          <label>走（秒）</label>
+          <input id="walkSec" type="number" min="0" max="59" value="0">
+        </div>
+
+      </div>
+
+      <div class="field">
+        <label>總共幾組？</label>
+        <input id="rounds" type="number" min="1" value="8">
+      </div>
+
+      <button class="primary" onclick="startWorkout()">
+        開始訓練
+      </button>
+
+      <div id="summary" class="smallInfo"></div>
+
+    </div>
+
+  </div>
+
+
+  <!-- 歷史紀錄 -->
+  <div id="historySection">
+
+    <div class="card">
+
+      <div class="historyHeader">
+        <h2>訓練紀錄</h2>
+        <button class="clearBtn" onclick="clearAllHistory()">
+          清除全部
+        </button>
+      </div>
+
+      <div id="historyList"></div>
+
+    </div>
+
+  </div>
+
 </div>
-<div class="controls"><button type="button" class="dark" id="pauseBtn">暫停</button><button type="button" id="skipBtn">跳過這段</button></div>
-<button type="button" class="end" id="endBtn">結束訓練</button>
-</section>
+
+
+<!-- 計時畫面 -->
+<div id="timerPage">
+
+  <div class="timerWrap">
+
+    <div id="timerCard" class="timerCard">
+
+      <div id="timerWorkoutName" class="timerName"></div>
+
+      <div id="phase" class="phase">跑</div>
+
+      <div id="round" class="round">
+        第 1 / 8 組
+      </div>
+
+      <div id="time" class="time">
+        01:00
+      </div>
+
+      <div id="next" class="next">
+        下一段：走 02:00
+      </div>
+
+    </div>
+
+    <div class="controls">
+
+      <button
+        id="pauseBtn"
+        class="controlBtn pause"
+        onclick="togglePause()">
+        暫停
+      </button>
+
+      <button
+        class="controlBtn skip"
+        onclick="skipSegment()">
+        跳過這段
+      </button>
+
+    </div>
+
+    <button class="endBtn" onclick="manualEnd()">
+      結束訓練
+    </button>
+
+  </div>
+
 </div>
+
 
 <script>
-(function(){
-"use strict";
-var stages=[],index=0,remaining=0,paused=false,timer=null,deadline=0;
-function el(id){return document.getElementById(id)}
-function val(id){var x=parseInt(el(id).value,10);return isNaN(x)?0:Math.max(0,x)}
-function secs(m,s){return val(m)*60+Math.min(59,val(s))}
-function fmt(x){x=Math.max(0,Math.round(x));var m=Math.floor(x/60),s=x%60;return (m<10?"0":"")+m+":"+(s<10?"0":"")+s}
-function settings(){return{run:secs("runM","runS"),walk:secs("walkM","walkS"),rounds:Math.max(1,val("rounds")),warm:secs("warmM","warmS"),cool:secs("coolM","coolS")}}
-function updateSummary(){var v=settings();el("summary").textContent="跑 "+fmt(v.run)+" ／ 走 "+fmt(v.walk)+" × "+v.rounds+" 組"}
-function makeStages(){
- var v=settings(),a=[],i;
- if(v.run<1){alert("跑步時間至少設定 1 秒");return null}
- if(v.warm>0)a.push({type:"warm",label:"暖身",sec:v.warm,round:"準備開始"});
- for(i=1;i<=v.rounds;i++){
-   a.push({type:"run",label:"跑",sec:v.run,round:"第 "+i+" / "+v.rounds+" 組"});
-   if(v.walk>0)a.push({type:"walk",label:"走",sec:v.walk,round:"第 "+i+" / "+v.rounds+" 組"});
- }
- if(v.cool>0)a.push({type:"cool",label:"收操",sec:v.cool,round:"最後放鬆"});
- return a
+
+let runSeconds = 60;
+let walkSeconds = 120;
+let totalRounds = 8;
+
+let currentRound = 1;
+let currentPhase = "run";
+let remaining = 60;
+
+let timer = null;
+let paused = false;
+
+let workoutStartTime = null;
+let workoutName = "";
+
+
+// ---------- 工具 ----------
+
+function formatTime(seconds){
+  seconds = Math.max(0,Math.round(seconds));
+
+  const m = Math.floor(seconds / 60);
+  const s = seconds % 60;
+
+  return String(m).padStart(2,"0") +
+         ":" +
+         String(s).padStart(2,"0");
 }
-function showStage(){
- if(timer){clearInterval(timer);timer=null}
- if(index>=stages.length){finish();return}
- remaining=stages[index].sec;deadline=Date.now()+remaining*1000;paint();
- timer=setInterval(tick,250)
+
+
+function secondsFromInputs(minID,secID){
+
+  const m =
+    parseInt(document.getElementById(minID).value) || 0;
+
+  const s =
+    parseInt(document.getElementById(secID).value) || 0;
+
+  return (m * 60) + s;
 }
-function paint(){
- var s=stages[index],n=stages[index+1],box=el("phasebox");
- el("phase").textContent=s.label;el("round").textContent=s.round;el("time").textContent=fmt(remaining);
- el("next").textContent=n?"下一段："+n.label+" "+fmt(n.sec):"最後一段";
- if(s.type==="run")box.style.background="var(--run)";
- else if(s.type==="walk")box.style.background="var(--walk)";
- else if(s.type==="cool")box.style.background="var(--cool)";
- else box.style.background="var(--warm)"
+
+
+function makeReadable(seconds){
+
+  const m = Math.floor(seconds / 60);
+  const s = seconds % 60;
+
+  if(s === 0){
+    return `${m} 分`;
+  }
+
+  if(m === 0){
+    return `${s} 秒`;
+  }
+
+  return `${m} 分 ${s} 秒`;
 }
+
+
+// ---------- 設定畫面 ----------
+
+function updateSummary(){
+
+  const r = secondsFromInputs("runMin","runSec");
+  const w = secondsFromInputs("walkMin","walkSec");
+
+  const rounds =
+    parseInt(document.getElementById("rounds").value) || 1;
+
+  const total = (r + w) * rounds;
+
+  document.getElementById("summary").innerHTML =
+    `每組：跑 ${makeReadable(r)} ＋ 走 ${makeReadable(w)}<br>
+     預計總訓練時間：${makeReadable(total)}`;
+}
+
+
+document
+.querySelectorAll("#setupSection input")
+.forEach(input=>{
+  input.addEventListener("input",updateSummary);
+});
+
+
+function saveSettings(){
+
+  const settings = {
+    name:
+      document.getElementById("workoutName").value,
+
+    runMin:
+      document.getElementById("runMin").value,
+
+    runSec:
+      document.getElementById("runSec").value,
+
+    walkMin:
+      document.getElementById("walkMin").value,
+
+    walkSec:
+      document.getElementById("walkSec").value,
+
+    rounds:
+      document.getElementById("rounds").value
+  };
+
+  localStorage.setItem(
+    "runWalkSettings",
+    JSON.stringify(settings)
+  );
+}
+
+
+function loadSettings(){
+
+  const saved =
+    localStorage.getItem("runWalkSettings");
+
+  if(!saved){
+    updateSummary();
+    return;
+  }
+
+  try{
+
+    const s = JSON.parse(saved);
+
+    document.getElementById("workoutName").value =
+      s.name || "";
+
+    document.getElementById("runMin").value =
+      s.runMin ?? 1;
+
+    document.getElementById("runSec").value =
+      s.runSec ?? 0;
+
+    document.getElementById("walkMin").value =
+      s.walkMin ?? 2;
+
+    document.getElementById("walkSec").value =
+      s.walkSec ?? 0;
+
+    document.getElementById("rounds").value =
+      s.rounds ?? 8;
+
+  }catch(e){}
+
+  updateSummary();
+}
+
+
+// ---------- 開始 ----------
+
+function startWorkout(){
+
+  runSeconds =
+    secondsFromInputs("runMin","runSec");
+
+  walkSeconds =
+    secondsFromInputs("walkMin","walkSec");
+
+  totalRounds =
+    parseInt(
+      document.getElementById("rounds").value
+    ) || 1;
+
+
+  if(runSeconds <= 0 || walkSeconds <= 0){
+
+    alert("跑步和走路時間都必須大於 0 秒。");
+    return;
+  }
+
+
+  workoutName =
+    document
+    .getElementById("workoutName")
+    .value
+    .trim();
+
+
+  if(!workoutName){
+
+    const now = new Date();
+
+    workoutName =
+      `${now.getMonth()+1}/${now.getDate()} 跑走訓練`;
+  }
+
+
+  saveSettings();
+
+
+  currentRound = 1;
+  currentPhase = "run";
+  remaining = runSeconds;
+  paused = false;
+
+  workoutStartTime = Date.now();
+
+
+  document.getElementById("homePage").style.display =
+    "none";
+
+  document.getElementById("timerPage").style.display =
+    "block";
+
+  document.getElementById("pauseBtn").textContent =
+    "暫停";
+
+
+  renderTimer();
+
+  clearInterval(timer);
+
+  timer = setInterval(tick,1000);
+}
+
+
+// ---------- 計時 ----------
+
 function tick(){
- if(paused)return;
- remaining=Math.max(0,Math.ceil((deadline-Date.now())/1000));
- el("time").textContent=fmt(remaining);
- if(remaining<=0){index++;showStage()}
+
+  if(paused) return;
+
+  remaining--;
+
+  if(remaining <= 0){
+    nextSegment();
+  }
+
+  renderTimer();
 }
-function start(){
- stages=makeStages();if(!stages)return;
- index=0;paused=false;
- el("setupScreen").style.display="none";
- el("timerScreen").style.display="flex";
- el("pauseBtn").textContent="暫停";
- showStage()
+
+
+function nextSegment(){
+
+  if(currentPhase === "run"){
+
+    currentPhase = "walk";
+    remaining = walkSeconds;
+
+  }else{
+
+    if(currentRound >= totalRounds){
+
+      finishWorkout(true);
+      return;
+    }
+
+    currentRound++;
+
+    currentPhase = "run";
+    remaining = runSeconds;
+  }
 }
-function pause(){
- if(!stages.length)return;
- paused=!paused;
- if(paused){remaining=Math.max(0,Math.ceil((deadline-Date.now())/1000));el("pauseBtn").textContent="繼續"}
- else{deadline=Date.now()+remaining*1000;el("pauseBtn").textContent="暫停"}
+
+
+function skipSegment(){
+
+  nextSegment();
+
+  if(
+    document.getElementById("timerPage").style.display
+    !== "none"
+  ){
+    renderTimer();
+  }
 }
-function skip(){if(stages.length){index++;showStage()}}
-function finish(){
- if(timer)clearInterval(timer);
- el("phase").textContent="完成 ✓";el("round").textContent="今天的訓練完成";el("time").textContent="";el("next").textContent="記得補水與放鬆";el("phasebox").style.background="var(--cool)"
+
+
+function togglePause(){
+
+  paused = !paused;
+
+  document.getElementById("pauseBtn").textContent =
+    paused ? "繼續" : "暫停";
 }
-function end(){
- if(timer)clearInterval(timer);stages=[];paused=false;
- el("timerScreen").style.display="none";el("setupScreen").style.display="block"
+
+
+function renderTimer(){
+
+  const phaseText =
+    currentPhase === "run" ? "跑" : "走";
+
+  const nextText =
+    currentPhase === "run" ? "走" : "跑";
+
+  const nextSeconds =
+    currentPhase === "run"
+      ? walkSeconds
+      : runSeconds;
+
+
+  document.getElementById("timerWorkoutName").textContent =
+    workoutName;
+
+  document.getElementById("phase").textContent =
+    phaseText;
+
+  document.getElementById("round").textContent =
+    `第 ${currentRound} / ${totalRounds} 組`;
+
+  document.getElementById("time").textContent =
+    formatTime(remaining);
+
+
+  if(
+    currentPhase === "walk" &&
+    currentRound === totalRounds
+  ){
+
+    document.getElementById("next").textContent =
+      "這是最後一段";
+
+  }else{
+
+    document.getElementById("next").textContent =
+      `下一段：${nextText} ${formatTime(nextSeconds)}`;
+  }
+
+
+  document.getElementById("timerCard").style.background =
+    currentPhase === "run"
+      ? "var(--blue)"
+      : "var(--green)";
 }
-el("startBtn").addEventListener("click",start,false);
-el("pauseBtn").addEventListener("click",pause,false);
-el("skipBtn").addEventListener("click",skip,false);
-el("endBtn").addEventListener("click",end,false);
-var inputs=document.querySelectorAll("input");
-for(var i=0;i<inputs.length;i++)inputs[i].addEventListener("input",updateSummary,false);
-updateSummary();
-})();
+
+
+// ---------- 結束 ----------
+
+function manualEnd(){
+
+  const yes =
+    confirm("確定要提早結束這次訓練嗎？");
+
+  if(!yes) return;
+
+  finishWorkout(false);
+}
+
+
+function finishWorkout(completed){
+
+  clearInterval(timer);
+  timer = null;
+
+
+  const elapsed =
+    Math.max(
+      0,
+      Math.round(
+        (Date.now() - workoutStartTime) / 1000
+      )
+    );
+
+
+  saveWorkoutRecord(completed,elapsed);
+
+
+  document.getElementById("timerPage").style.display =
+    "none";
+
+  document.getElementById("homePage").style.display =
+    "block";
+
+
+  showHistory();
+
+
+  if(completed){
+    alert("訓練完成！紀錄已儲存。");
+  }else{
+    alert("本次訓練已結束，紀錄已儲存。");
+  }
+}
+
+
+// ---------- 紀錄 ----------
+
+function getHistory(){
+
+  try{
+
+    return JSON.parse(
+      localStorage.getItem("runWalkHistory")
+    ) || [];
+
+  }catch(e){
+
+    return [];
+  }
+}
+
+
+function saveWorkoutRecord(completed,elapsed){
+
+  const history = getHistory();
+
+  const record = {
+
+    id:Date.now(),
+
+    date:new Date().toISOString(),
+
+    name:workoutName,
+
+    runSeconds:runSeconds,
+
+    walkSeconds:walkSeconds,
+
+    plannedRounds:totalRounds,
+
+    reachedRound:currentRound,
+
+    completed:completed,
+
+    elapsed:elapsed
+  };
+
+
+  history.unshift(record);
+
+
+  localStorage.setItem(
+    "runWalkHistory",
+    JSON.stringify(history)
+  );
+}
+
+
+function renderHistory(){
+
+  const list =
+    document.getElementById("historyList");
+
+  const history = getHistory();
+
+
+  if(history.length === 0){
+
+    list.innerHTML =
+      `<div class="empty">
+        還沒有訓練紀錄。<br>
+        完成第一次訓練後會出現在這裡。
+       </div>`;
+
+    return;
+  }
+
+
+  list.innerHTML =
+    history.map(record=>{
+
+      const date =
+        new Date(record.date);
+
+      const dateText =
+        `${date.getFullYear()}/${date.getMonth()+1}/${date.getDate()} ` +
+        `${String(date.getHours()).padStart(2,"0")}:` +
+        `${String(date.getMinutes()).padStart(2,"0")}`;
+
+
+      const status =
+        record.completed
+          ? "完成"
+          : "提早結束";
+
+
+      return `
+
+      <div class="record">
+
+        <div class="recordTop">
+
+          <div class="recordName">
+            ${escapeHTML(record.name)}
+          </div>
+
+          <div class="recordStatus ${record.completed ? "" : "incomplete"}">
+            ${status}
+          </div>
+
+        </div>
+
+        <div class="recordDate">
+          ${dateText}
+        </div>
+
+        <div class="recordInfo">
+
+          跑 ${makeReadable(record.runSeconds)}
+          ／
+          走 ${makeReadable(record.walkSeconds)}
+          <br>
+
+          設定 ${record.plannedRounds} 組
+          ／
+          到第 ${record.reachedRound} 組
+          <br>
+
+          實際時間：
+          ${makeReadable(record.elapsed)}
+
+        </div>
+
+        <button
+          class="deleteBtn"
+          onclick="deleteRecord(${record.id})">
+          刪除此紀錄
+        </button>
+
+      </div>
+
+      `;
+
+    }).join("");
+}
+
+
+function deleteRecord(id){
+
+  if(!confirm("確定刪除這筆訓練紀錄？")){
+    return;
+  }
+
+  let history = getHistory();
+
+  history =
+    history.filter(r=>r.id !== id);
+
+  localStorage.setItem(
+    "runWalkHistory",
+    JSON.stringify(history)
+  );
+
+  renderHistory();
+}
+
+
+function clearAllHistory(){
+
+  if(!confirm("確定要清除全部訓練紀錄嗎？")){
+    return;
+  }
+
+  localStorage.removeItem("runWalkHistory");
+
+  renderHistory();
+}
+
+
+// ---------- 分頁 ----------
+
+function showSetup(){
+
+  document.getElementById("setupSection").style.display =
+    "block";
+
+  document.getElementById("historySection").style.display =
+    "none";
+
+  document.getElementById("setupTab")
+    .classList.add("active");
+
+  document.getElementById("historyTab")
+    .classList.remove("active");
+}
+
+
+function showHistory(){
+
+  document.getElementById("setupSection").style.display =
+    "none";
+
+  document.getElementById("historySection").style.display =
+    "block";
+
+  document.getElementById("setupTab")
+    .classList.remove("active");
+
+  document.getElementById("historyTab")
+    .classList.add("active");
+
+  renderHistory();
+}
+
+
+// ---------- 防止紀錄名稱破壞 HTML ----------
+
+function escapeHTML(text){
+
+  const div =
+    document.createElement("div");
+
+  div.textContent = text;
+
+  return div.innerHTML;
+}
+
+
+// ---------- 初始化 ----------
+
+loadSettings();
+
 </script>
+
 </body>
 </html>
